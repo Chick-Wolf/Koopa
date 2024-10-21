@@ -8,6 +8,9 @@ import _sim
 
 Action = Union[Literal['cooperate'], Literal['nothing'], Literal['cheat']]
 
+PLAYER_NAME = ('A','B')
+PLAYER_NAME_COLOR = ('\x1b[91mA\x1b[39m','\x1b[94mB\x1b[39m')
+
 def get_scores_util(a: Action, b: Action) -> int:
     return {
         ('cooperate','cooperate') : 2,
@@ -26,6 +29,20 @@ def get_scores_util(a: Action, b: Action) -> int:
 def get_scores(a: Action, b: Action) -> tuple[int,int]:
     return (get_scores_util(a,b),get_scores_util(b,a))
 
+def color_gain(n: int) -> str:
+    if n == 0:
+        return '\x1b[33m~%d\x1b[39m'%(n,)
+    c = '32' if n > 0 else '31'
+    return '\x1b[%sm%+d\x1b[39m'%(c,n)
+
+def color_act(act: Action) -> str:
+    return {
+        'cooperate': '\x1b[32mC\x1b[39m',
+        'nothing': '\x1b[33mN\x1b[39m',
+        'cheat': '\x1b[31mT\x1b[39m',
+    }[act]
+    
+
 def play_round():
     actions_a: list[str] = []
     actions_b: list[str] = []
@@ -37,17 +54,12 @@ def play_round():
     
     score_a: int = 0
     score_b: int = 0
-    
-    def debug(*args,**kwargs):
-        print('  \x1b[90m[%s\x1b[22m\x1b[90m]\x1b[39m'%(('\x1b[91;1mA','\x1b[94;1mB')[player],),*args,**kwargs)
 
     def act( action: Action ) -> None:
         nonlocal act_a, act_b
         
         if action not in ('cooperate', 'nothing', 'cheat'):
             raise TypeError('Bad action %s, expected one of "cooperate", "nothing", "cheat"'%(repr(action),))
-        
-        debug('Acting: \x1b[36m%s\x1b[39m'%(repr(action),))
         
         if player == 0:
             act_a = action
@@ -87,16 +99,17 @@ def play_round():
     bot_b = module_from_spec(spec)
     spec.loader.exec_module(bot_b)
 
-    for i_turn in range(10):
-        print('─── turn %d ───'%(i_turn+1,))
-        
+    for i_turn in range(10):        
         act_a = act_b = None
         
-        player = 0
-        bot_a.run()
-        
-        player = 1
-        bot_b.run()
+        for pl, run in ( (0,bot_a.run), (1,bot_b.run) ):
+            player = pl
+            try:
+                run()
+            except BaseException as ex:
+                print('Player %s has \x1b[91;1mcrashded\x1b[39;22m: \x1b[90m(during turn #%d)\x1b[39m'%(PLAYER_NAME_COLOR[pl],i_turn+1))
+                print(ex)
+                exit(1)
         
         np = (['A'] if not act_a else []) + (['B'] if not act_b else [])
         
@@ -111,8 +124,10 @@ def play_round():
         score_a += sa
         score_b += sb
         
-        print('\x1b[91mA\x1b[39m: %d \x1b[90m(%+d)\x1b[39m'%(score_a,sa))
-        print('\x1b[94mB\x1b[39m: %d \x1b[90m(%+d)\x1b[39m'%(score_b,sb))
+        print('╭── turn %02d ───╮'%(i_turn+1,))
+        print('│ \x1b[91mA\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_a,color_gain(sa),color_act(act_a)))
+        print('│ \x1b[94mB\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_b,color_gain(sb),color_act(act_b)))
+        print('╰──────────────╯')
         
         actions_a.append(act_a)
         actions_b.append(act_b)

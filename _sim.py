@@ -18,7 +18,7 @@ def getTurn() -> int:
     """ Get the current turn number """
     
 def getAction(n: int) -> _Action:
-    """ Get the nth action from opponent """
+    """ Get the n-th action from opponent """
     
 def getSelf(n: int) -> _Action:
-    """ Get the nth action from self """
+    """ Get the n-th action from self """
