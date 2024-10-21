@@ -1,8 +1,6 @@
 from typing import Literal, Union
 
-import math, random
 from importlib.util import spec_from_file_location, module_from_spec
-from pathlib import Path
 
 import _sim
 
@@ -16,11 +14,11 @@ def get_scores_util(a: Action, b: Action) -> int:
         ('cooperate','cooperate') : 2,
         ('cooperate','nothing') : -1,
         ('cooperate','cheat') : -1,
-        
+
         ('nothing','cooperate') : 3,
         ('nothing','nothing') : 0,
         ('nothing','cheat') : 0,
-        
+
         ('cheat','cooperate') : 4,
         ('cheat','nothing') : -2,
         ('cheat','cheat') : -2,
@@ -41,26 +39,52 @@ def color_act(act: Action) -> str:
         'nothing': '\x1b[33mN\x1b[39m',
         'cheat': '\x1b[31mT\x1b[39m',
     }[act]
-    
 
-def play_round():
+class RoundResult:
+
+    class Player:
+
+        actions: list[Action]
+        score:   int
+
+        def __init__(self, actions: list[Action], score: int):
+            self.actions = actions
+            self.score = score
+
+    a: Player
+    b: Player
+
+    def __init__(self, a: Player, b: Player):
+        self.a = a
+        self.b = b
+        
+class Bot:
+    
+    path: str
+    func: str
+    
+    def __init__(self, path: str, func: str):
+        self.path = path
+        self.func = func
+
+def play_round( a: Bot, b: Bot, debug: bool = False ) -> RoundResult:
     actions_a: list[str] = []
     actions_b: list[str] = []
-    
+
     act_a: str = None
     act_b: str = None
 
     player: Union[Literal[0],Literal[1]] = 0
-    
+
     score_a: int = 0
     score_b: int = 0
 
     def act( action: Action ) -> None:
         nonlocal act_a, act_b
-        
+
         if action not in ('cooperate', 'nothing', 'cheat'):
             raise TypeError('Bad action %s, expected one of "cooperate", "nothing", "cheat"'%(repr(action),))
-        
+
         if player == 0:
             act_a = action
         else:
@@ -74,62 +98,73 @@ def play_round():
 
     def cheat() -> None:
         act('cheat')
-        
+
     def getAction(n: int) -> Action:
         return (actions_a,actions_b)[player][n]
-    
+
     def getSelf(n: int) -> Action:
         return (actions_a,actions_b)[1-player][n]
+    
+    def getTurn() -> int:
+        return i_turn
+    
+    def assign_funcs(obj):
+        obj.cooperate = cooperate
+        obj.nothing = nothing
+        obj.cheat = cheat
+        obj.act = act
+        obj.getAction = getAction
+        obj.getSelf = getSelf
+        obj.getTurn = getTurn
         
-    _sim.cooperate = cooperate
-    _sim.nothing = nothing
-    _sim.cheat = cheat
-    _sim.act = act
-    _sim.getAction = getAction
-    _sim.getSelf = getSelf
-    _sim.getTurn = lambda: i_turn
-    
-    bot_path = str(Path('bot.py').absolute())
-    
-    spec = spec_from_file_location('bot', bot_path)
-    
-    bot_a = module_from_spec(spec)
-    spec.loader.exec_module(bot_a)
-    
-    bot_b = module_from_spec(spec)
-    spec.loader.exec_module(bot_b)
+    assign_funcs(_sim)
 
-    for i_turn in range(10):        
+    spec_a = spec_from_file_location('bot_a',a.path)
+    bot_a = module_from_spec(spec_a)
+    spec_a.loader.exec_module(bot_a)
+    assign_funcs(bot_a)
+
+    spec_b = spec_from_file_location('bot_b',b.path)
+    bot_b = module_from_spec(spec_b)
+    spec_b.loader.exec_module(bot_b)
+    assign_funcs(bot_b)
+
+    for i_turn in range(10):
         act_a = act_b = None
-        
-        for pl, run in ( (0,bot_a.run), (1,bot_b.run) ):
+
+        for pl, run in ( (0,getattr(bot_a,a.func)), (1,getattr(bot_b,b.func)) ):
             player = pl
             try:
                 run()
             except BaseException as ex:
-                print('Player %s has \x1b[91;1mcrashded\x1b[39;22m: \x1b[90m(during turn #%d)\x1b[39m'%(PLAYER_NAME_COLOR[pl],i_turn+1))
+                print('\x1b[90m(during turn #%d)\x1b[39m'%(i_turn+1,))
+                print('Player %s has \x1b[91;1mcrashded\x1b[39;22m:'%(PLAYER_NAME_COLOR[pl]))
                 print(ex)
                 exit(1)
-        
+
         np = (['A'] if not act_a else []) + (['B'] if not act_b else [])
-        
+
         if len(np):
             plur = 's' if len(np) != 1 else ''
-            plur2 = 'ont' if len(np) != 1 else 'a'
-            print('Le%s joueur%s %s n\'%s pas choisi'%(plur,plur,' et '.join(np),plur2))
+            print('\x1b[90m(during turn #%d)\x1b[39m'%(i_turn+1,))
+            print('Player%s %s didn\'t choose'%(plur,' and '.join(np)))
             exit(1)
-            
+
         sa, sb = get_scores(act_a,act_b)
-        
+
         score_a += sa
         score_b += sb
-        
-        print('╭── turn %02d ───╮'%(i_turn+1,))
-        print('│ \x1b[91mA\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_a,color_gain(sa),color_act(act_a)))
-        print('│ \x1b[94mB\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_b,color_gain(sb),color_act(act_b)))
-        print('╰──────────────╯')
-        
+
+        if debug:
+            print('╭── turn %02d ───╮'%(i_turn+1,))
+            print('│ \x1b[91mA\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_a,color_gain(sa),color_act(act_a)))
+            print('│ \x1b[94mB\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_b,color_gain(sb),color_act(act_b)))
+            print('╰──────────────╯')
+
         actions_a.append(act_a)
         actions_b.append(act_b)
 
-play_round()
+    return RoundResult(
+        RoundResult.Player(actions_a,score_a),
+        RoundResult.Player(actions_b,score_b)
+    )
