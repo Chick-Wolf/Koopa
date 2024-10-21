@@ -168,10 +168,10 @@ def play_round( a: Bot, b: Bot, debug: bool = False ) -> Union[RoundResult,None]
         score_b += sb
 
         if debug:
-            print('╭── turn %02d ───╮'%(i_turn+1,))
-            print('│ \x1b[91mA\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_a,color_gain(sa),color_act(act_a)))
-            print('│ \x1b[94mB\x1b[39m: %2d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_b,color_gain(sb),color_act(act_b)))
-            print('╰──────────────╯')
+            print('╭─── turn %02d ───╮'%(i_turn+1,))
+            print('│ \x1b[91mA\x1b[39m: % 3d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_a,color_gain(sa),color_act(act_a)))
+            print('│ \x1b[94mB\x1b[39m: % 3d \x1b[90m(%s\x1b[90m)\x1b[39m %s │'%(score_b,color_gain(sb),color_act(act_b)))
+            print('╰───────────────╯')
 
         actions_a.append(act_a)
         actions_b.append(act_b)
