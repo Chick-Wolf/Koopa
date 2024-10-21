@@ -1,8 +1,8 @@
 import typing as _typing
 
-_Action = _typing.Union[_typing.Literal['cooperate'], _typing.Literal['nothing'], _typing.Literal['cheat']]
+_Action = _typing.Literal['cooperate', 'nothing', 'cheat']
 
-def act( action: _typing.Literal['cooperate'] | _typing.Literal['nothing'] | _typing.Literal['cheat'] ) -> None:
+def act( action: _Action ) -> None:
     """ Run an action for this round """
 
 def cooperate() -> None:

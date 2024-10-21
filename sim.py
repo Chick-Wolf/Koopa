@@ -4,7 +4,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 
 import _sim
 
-Action = Union[Literal['cooperate'], Literal['nothing'], Literal['cheat']]
+Action = Literal['cooperate', 'nothing', 'cheat']
 
 PLAYER_NAME = ('A','B')
 PLAYER_NAME_COLOR = ('\x1b[91mA\x1b[39m','\x1b[94mB\x1b[39m')
@@ -100,10 +100,10 @@ def play_round( a: Bot, b: Bot, debug: bool = False ) -> Union[RoundResult,None]
         act('cheat')
 
     def getAction(n: int) -> Action:
-        return (actions_a,actions_b)[player][n]
+        return (actions_a,actions_b)[1-player][n]
 
     def getSelf(n: int) -> Action:
-        return (actions_a,actions_b)[1-player][n]
+        return (actions_a,actions_b)[player][n]
     
     def getTurn() -> int:
         return i_turn
