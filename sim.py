@@ -67,7 +67,7 @@ class Bot:
         self.path = path
         self.func = func
 
-def play_round( a: Bot, b: Bot, debug: bool = False ) -> RoundResult:
+def play_round( a: Bot, b: Bot, debug: bool = False ) -> Union[RoundResult,None]:
     actions_a: list[str] = []
     actions_b: list[str] = []
 
@@ -120,17 +120,29 @@ def play_round( a: Bot, b: Bot, debug: bool = False ) -> RoundResult:
     assign_funcs(_sim)
 
     spec_a = spec_from_file_location('bot_a',a.path)
+    if not spec_a:
+        print('Could not find file \x1b[95m%s\x1b[39m for bot %s'%(repr(a.path),PLAYER_NAME_COLOR[0]))
+        return None
     bot_a = module_from_spec(spec_a)
     spec_a.loader.exec_module(bot_a)
     assign_funcs(bot_a)
 
     spec_b = spec_from_file_location('bot_b',b.path)
+    if not spec_b:
+        print('Could not find file \x1b[95m%s\x1b[39m for bot %s'%(repr(b.path),PLAYER_NAME_COLOR[1]))
+        return None
     bot_b = module_from_spec(spec_b)
     spec_b.loader.exec_module(bot_b)
     assign_funcs(bot_b)
 
     for i_turn in range(10):
         act_a = act_b = None
+        
+        for pl, mod, bot in ( (0,bot_a,a), (1,bot_b,b) ):
+            if not hasattr(mod, bot.func):
+                print('\x1b[90m(during turn #%d)\x1b[39m'%(i_turn+1,))
+                print('Could not find \x1b[95m%s\x1b[39m in bot %s'%(repr(bot.func),PLAYER_NAME_COLOR[pl]))
+                return None
 
         for pl, run in ( (0,getattr(bot_a,a.func)), (1,getattr(bot_b,b.func)) ):
             player = pl
@@ -140,7 +152,7 @@ def play_round( a: Bot, b: Bot, debug: bool = False ) -> RoundResult:
                 print('\x1b[90m(during turn #%d)\x1b[39m'%(i_turn+1,))
                 print('Player %s has \x1b[91;1mcrashded\x1b[39;22m:'%(PLAYER_NAME_COLOR[pl]))
                 print(ex)
-                exit(1)
+                return None
 
         np = (['A'] if not act_a else []) + (['B'] if not act_b else [])
 
@@ -148,7 +160,7 @@ def play_round( a: Bot, b: Bot, debug: bool = False ) -> RoundResult:
             plur = 's' if len(np) != 1 else ''
             print('\x1b[90m(during turn #%d)\x1b[39m'%(i_turn+1,))
             print('Player%s %s didn\'t choose'%(plur,' and '.join(np)))
-            exit(1)
+            return None
 
         sa, sb = get_scores(act_a,act_b)
 
