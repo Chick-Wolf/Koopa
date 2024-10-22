@@ -1,3 +1,7 @@
+"""
+Picks a random action each turn
+"""
+
 import math, random
 from _sim import *
 

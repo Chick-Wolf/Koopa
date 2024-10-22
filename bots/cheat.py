@@ -1,3 +1,7 @@
+"""
+Always cheats
+"""
+
 import math, random
 from _sim import *
 

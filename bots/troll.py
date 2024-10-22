@@ -1,3 +1,7 @@
+"""
+Picks any action that is not the opponent's previous one
+"""
+
 import math, random
 from _sim import *
 

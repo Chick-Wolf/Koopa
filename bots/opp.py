@@ -1,3 +1,7 @@
+"""
+Tries to pick the best action to counter the opponent's previous move
+"""
+
 import math, random
 from _sim import *
 

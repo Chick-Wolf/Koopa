@@ -1,3 +1,7 @@
+"""
+Copies the opponent's previous move
+"""
+
 import math, random
 from _sim import *
 
