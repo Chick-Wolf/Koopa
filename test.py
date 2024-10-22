@@ -22,7 +22,7 @@ grid = []
 
 def specialized_color_gain(n: float) -> str:
     if n == 0:
-        return '\x1b[33m~%d\x1b[39m'%(n,)
+        return '   \x1b[33m0.00\x1b[39m'
     c = '32' if n > 0 else '31'
     # return '\x1b[%sm%s'%(c,str(round(abs(n),2)).rjust(6, ' ')) # What am I doing seriously..
     return '\x1b[%sm%7.2f'%(c,n)
@@ -93,15 +93,15 @@ elif test == 'long':
 
     # Yeah don't check 'specialized_color_gain', your eyes wont survive.
     m = "%\x1b[39m"
-    pf1 = specialized_color_gain(((sa-sb)/sa)*100)+m
-    pf2 = specialized_color_gain(((sb-sa)/sb)*100)+m
-    pt1 = str(round((wa/wt)*100,2)).rjust(6, ' ') # Doing some weird stuff to add space before numbers, so it takes the same place no matter what.
-    pt2 = str(round((wb/wt)*100,2)).rjust(6, ' ')
+    pf1 = specialized_color_gain(((sa-sb)/(sa or 1))*100)+m
+    pf2 = specialized_color_gain(((sb-sa)/(sb or 1))*100)+m
+    pt1 = '%6.2f'%((wa/(wt or 1))*100,) # Doing some weird stuff to add space before numbers, so it takes the same place no matter what.
+    pt2 = '%6.2f'%((wb/(wt or 1))*100,)
     
-    print('╭──── \x1b[38;5;146mresults\x1b[39m ─────────────────╮')
-    print(f'│ \x1b[91mA\x1b[39m: {sa} \x1b[90m({pf1}\x1b[90m)\x1b[39m {pt1}% │') # Man I prefer format, pls.
-    print(f'│ \x1b[94mB\x1b[39m: {sb} \x1b[90m({pf2}\x1b[90m)\x1b[39m {pt2}% │')
-    print('╰──────────────────────────────╯')
+    print('╭──── \x1b[38;5;146mresults\x1b[39m ───────────────────╮')
+    print(f'│ \x1b[91mA\x1b[39m: {sa:< 8} \x1b[90m({pf1}\x1b[90m)\x1b[39m {pt1}% │') # Man I prefer format, pls.
+    print(f'│ \x1b[94mB\x1b[39m: {sb:< 8} \x1b[90m({pf2}\x1b[90m)\x1b[39m {pt2}% │')
+    print('╰────────────────────────────────╯')
     # print('A: %d (score %.2f%%) (wins %.2f%%)'%(sa,((sa-sb)/sa)*100,(wa/wt)*100))
     # print('B: %d (score %.2f%%) (wins %.2f%%)'%(sb,((sb-sa)/sb)*100,(wb/wt)*100))
 
