@@ -4,6 +4,7 @@ from pathlib import Path
 from sys import argv
 from itertools import combinations_with_replacement
 from glob import glob
+from math import copysign
 
 from sim import play_round, Bot
 
@@ -126,28 +127,54 @@ elif test == 'grid':
             t[ib] += result.b.score
         
         g[(ia,ib)] = (sa,sb)
-        
+    
+    print('┄─ \x1b[38;5;185mLeaderboard\x1b[39m ─┄')
+    
+    ms = max(t)
+    ls = min(t)
     for k, (i, s) in enumerate(sorted(enumerate(t),key=lambda u:u[1],reverse=True)):
         path, func = parse_botspec(grid[i])
-        print('%2d \x1b[95m%s\x1b[90m:%s\x1b[39m : %d'%(k+1,path,func,s))
+        t = (s-ls)/(ms-ls)*100 # or (s/ms)*100
+        print('%2d %3d \x1b[95m%s\x1b[90m:%s\x1b[39m : %d'%(k+1,t,path,func,s))
+        
+    print('\n┄─ \x1b[38;5;185mDetailed comparison\x1b[39m ─┄')
     
-    # for (ia, ib), s in g.items():
-    #     a,b = grid[ia],grid[ib]
-    #     sa,sb = s
-    #     path_a,func_a = parse_botspec(a)
-    #     path_b,func_b = parse_botspec(b)
-    #     rows_a,rows_b = [],[]
-    #     print('─── \x1b[95m%s\x1b[90m:\x1b[95m%s\x1b[39m \x1b[90m(\x1b[91;%dmA\x1b[22;90m)\x1b[39m vs \x1b[95m%s\x1b[90m:\x1b[95m%s\x1b[39m \x1b[90m(\x1b[94;%dmB\x1b[22;90m)\x1b[39m ───'%(path_a,func_a,1 if sa>sb else 2,path_b,func_b,1 if sb>sa else 2))
-    #     for i, (rows,j) in enumerate((
-    #         (rows_a,ia),
-    #         (rows_b,ib)
-    #     )):
-    #         p,q = s[::1-2*i]
-    #         r = (p-q)/(max(p,q) or 1)
-    #         # rows.extend((
-    #         #     ('score',  str(p), None),
-    #         #     ('score%', '%.2f'%(r,), )
-    #         # ))
+    for (ia, ib), s in g.items():
+        a,b = grid[ia],grid[ib]
+        sa,sb = s
+        path_a,func_a = parse_botspec(a)
+        path_b,func_b = parse_botspec(b)
+        rows_a,rows_b = [],[]
+        # print('─── \x1b[95m%s\x1b[90m:\x1b[95m%s\x1b[39m \x1b[90m(\x1b[91;%dmA\x1b[22;90m)\x1b[39m vs \x1b[95m%s\x1b[90m:\x1b[95m%s\x1b[39m \x1b[90m(\x1b[94;%dmB\x1b[22;90m)\x1b[39m ───'%(path_a,func_a,1 if sa>sb else 2,path_b,func_b,1 if sb>sa else 2))
+        for i, (rows,j) in enumerate((
+            (rows_a,ia),
+            (rows_b,ib)
+        )):
+            # Score percentage could be reworked
+            p,q = s[::1-2*i]
+            r = p/(max(p,q) or 1)
+            rows.extend((
+                ('score',  str(p)),
+                # Not sure which one is best
+                # ('score%', '%.2f'%(r*100,), '91' if r < 1 else '92')
+                ('', '%.2f%%'%(r*100,), '\x1b['+('91;2' if p < q else '92;1')+'m', '\x1b[39;22m')
+            ))
+        colsize_a_h = len(path_a)+len(func_b)+3
+        colsize_a_l = max(map(lambda r:len(r[0]),rows_a))
+        colsize_a_r = max(map(lambda r:len(r[1]),rows_a))
+        colsize_a_t = max(colsize_a_h,colsize_a_l+colsize_a_r+1)
+        colsize_a_r += max(0,colsize_a_t-colsize_a_r-colsize_a_l-1)
+        colsize_b_h = len(path_b)+len(func_b)+3
+        colsize_b_l = max(map(lambda r:len(r[0]),rows_b))
+        colsize_b_r = max(map(lambda r:len(r[1]),rows_b))
+        colsize_b_t = max(colsize_b_h,colsize_b_l+colsize_b_r+1)
+        colsize_b_r += max(0,colsize_b_t-colsize_b_r-colsize_b_l-1)
+        print('╭'+('{:─^%ds}'%(colsize_a_t+16)).format(' \x1b[38;5;146m'+path_a+':'+func_a+'\x1b[39m ')+'╮ ╭'+('{:─^%ds}'%(colsize_b_t+16)).format(' \x1b[38;5;146m'+path_b+':'+func_b+'\x1b[39m ')+'╮')
+        for ra, rb in zip(rows_a,rows_b):
+            sa,sb = (ra[2] if len(ra) > 2 and ra[2] else ''),(rb[2] if len(rb) > 2 and rb[2] else '')
+            ta,tb = (ra[3] if len(ra) > 3 and ra[3] else ''),(rb[3] if len(rb) > 3 and rb[3] else '')
+            print('│'+('{:<%d} {:>%d}\x1b[39m'%(colsize_a_l,colsize_a_r+len(sa+ta))).format(ra[0],sa+ra[1]+ta)+'│ │'+('{:<%d} {:>%d}'%(colsize_b_l,colsize_b_r+len(sb+tb))).format(rb[0],sb+rb[1]+tb)+'│')
+        print('╰'+'─'*colsize_a_t+'╯ ╰'+'─'*colsize_b_t+'╯')
 
 else:
     print('Bad test kind %s'%(repr(test),))
