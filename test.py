@@ -7,7 +7,7 @@ from glob import glob
 
 from sim import play_round, Bot
 
-default_bot_path = str(Path('bots/bot.py').absolute())
+default_bot_path = str(Path('bots/rand.py').absolute())
 default_bot_func = 'run'
 
 bot_a = Bot(default_bot_path,default_bot_func)
