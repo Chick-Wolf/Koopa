@@ -69,10 +69,10 @@ elif test == 'long':
     # wa  = win a
     # wb  = win b
     # wt  = win total
-    # pf1 = pourcentage false 1
-    # pf2 = pourcentage false 2
-    # pt1 = pourcentage true 1
-    # pt2 = pourcentage true 1
+    # pf1 = percentage false 1
+    # pf2 = percentage false 2
+    # pt1 = percentage true 1
+    # pt2 = percentage true 1
 
     sa = sb = 0
     wa = wb = 0
