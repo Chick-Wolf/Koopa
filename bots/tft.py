@@ -1,5 +1,5 @@
 """
-Tries to pick the best action to counter the opponent's previous move
+Reasonable, tries to win this with the opponent. If not possible to cooperate, decide to do nothing.
 """
 
 import math, random
@@ -10,7 +10,7 @@ def run():
         nothing()
     else:
         act({
-            'cooperate': 'cheat',
+            'cooperate': 'cooperate',
             'nothing': 'nothing',
             'cheat': 'nothing',
         }[getAction(-1)])

@@ -19,6 +19,12 @@ test = 'single'
 
 grid = []
 
+def specialized_color_gain(n: float) -> str:
+    if n == 0:
+        return '\x1b[33m~%d\x1b[39m'%(n,)
+    c = '32' if n > 0 else '31'
+    return '\x1b[%sm%s'%(c,str(round(abs(n),2)).rjust(6, ' ')) # What am I doing seriously..
+
 def parse_botspec(spec: str) -> tuple[str,str]:
     func = None
     if '@' in spec:
@@ -55,6 +61,17 @@ if test == 'single':
 
 elif test == 'long':
     
+    # We wanna understand ! So here are the abreviation :>
+    # sa  = score a
+    # sb  = score b
+    # wa  = win a
+    # wb  = win b
+    # wt  = win total
+    # pf1 = pourcentage false 1
+    # pf2 = pourcentage false 2
+    # pt1 = pourcentage true 1
+    # pt2 = pourcentage true 1
+
     sa = sb = 0
     wa = wb = 0
     
@@ -71,8 +88,20 @@ elif test == 'long':
         wb += result.b.score > result.a.score
     
     wt = wa+wb
-    print('A: %d (score %.2f%%) (wins %.2f%%)'%(sa,((sa-sb)/sa)*100,(wa/wt)*100))
-    print('B: %d (score %.2f%%) (wins %.2f%%)'%(sb,((sb-sa)/sb)*100,(wb/wt)*100))
+
+    # Yeah don't check 'specialized_color_gain', your eyes wont survive.
+    m = "%\x1b[39m"
+    pf1 = specialized_color_gain(((sa-sb)/sa)*100)+m
+    pf2 = specialized_color_gain(((sb-sa)/sb)*100)+m
+    pt1 = str(round((wa/wt)*100,2)).rjust(6, ' ') # Doing some weird stuff to add space before numbers, so it takes the same place no matter what.
+    pt2 = str(round((wb/wt)*100,2)).rjust(6, ' ')
+    
+    print('╭──── \x1b[38;5;146mresults\x1b[39m ────────────────╮')
+    print(f'│ \x1b[91mA\x1b[39m: {sa} \x1b[90m({pf1}\x1b[90m)\x1b[39m {pt1}% │') # Man I prefer format, pls.
+    print(f'│ \x1b[94mB\x1b[39m: {sb} \x1b[90m({pf2}\x1b[90m)\x1b[39m {pt2}% │')
+    print('╰─────────────────────────────╯')
+    # print('A: %d (score %.2f%%) (wins %.2f%%)'%(sa,((sa-sb)/sa)*100,(wa/wt)*100))
+    # print('B: %d (score %.2f%%) (wins %.2f%%)'%(sb,((sb-sa)/sb)*100,(wb/wt)*100))
 
 elif test == 'grid':
     g: dict[tuple[int,int],tuple[int,int]] = {}
