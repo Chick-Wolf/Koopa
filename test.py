@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-
 from sys import argv
+from itertools import combinations_with_replacement
+from glob import glob
 
 from sim import play_round, Bot
-
-from itertools import combinations_with_replacement
 
 default_bot_path = str(Path('bots/bot.py').absolute())
 default_bot_func = 'run'
@@ -44,7 +43,11 @@ while len(argv):
     if arg == '-test':
         test = argv.pop(0)
         if test == 'grid':
-            grid = argv.pop(0).split(',')
+            w = argv.pop(0)
+            if w == '*':
+                grid = glob('bots/*.py')
+            else:
+                grid = w.split(',')
 
 if test == 'single':
     
