@@ -3,6 +3,6 @@ from _sim import *
 
 def run():
     if getTurn() == 0:
-        (random.choice((cooperate,nothing,cheat)))()
+        nothing()
     else:
         act(getAction(-1))
